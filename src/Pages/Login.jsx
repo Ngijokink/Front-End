@@ -395,10 +395,39 @@ const Login = () => {
         return;
       }
 
-      localStorage.setItem("token", res.data.token);
+      const token = res.data.token || res.data.data?.token;
+      // User data ada di res.data.data, bukan res.data.user
+      const user = res.data.data;
+      
+      if (!token) {
+        console.error("Response API:", res.data);
+        setError("Token tidak ditemukan dalam response. Hubungi admin.");
+        return;
+      }
+
+      if (!user || !user.id_user) {
+        console.error("User data tidak ditemukan. Response:", res.data);
+        setError("Data user tidak ditemukan. Hubungi admin.");
+        return;
+      }
+
+      console.log("Token diterima:", token.substring(0, 20) + "...");
+      console.log("User data diterima:", user);
+      
+      // Simpan token
+      localStorage.setItem("token", token);
+      // Simpan user data dengan role (perhatikan field: id_user, bukan id)
+      localStorage.setItem("user", JSON.stringify({
+        id: user.id_user,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }));
+      
+      console.log("Data disimpan ke localStorage");
       navigate("/dashboard");
     } catch (err) {
-      console.error(err);
+      console.error("Login error:", err);
       setError(err?.response?.data?.message || "Email atau password salah. Coba maneh, Mas/Mbak.");
     } finally {
       setLoading(false);
